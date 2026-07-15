@@ -12,13 +12,18 @@ class Choices(models.TextChoices):
 class Category(models.Model):
     name = models.CharField(max_length=100)
 
-
     def __str__(self):
         return self.name
 
 
+    class Meta:
+        db_table = 'task_manager_category'
+        verbose_name = 'Category'
+        constraints = [models.UniqueConstraint(fields=['name'], name='unique_name_category')]
+        verbose_name_plural = 'Categories'
+
 class Task(models.Model):
-    title = models.CharField(max_length=100, unique_for_date='created_at')
+    title = models.CharField(max_length=100)
     description = models.TextField()
     categories = models.ManyToManyField(Category)
     status = models.CharField(choices=Choices, default=Choices.NEW, max_length=100)
@@ -27,6 +32,14 @@ class Task(models.Model):
 
     def __str__(self):
         return self.title
+
+
+    class Meta:
+        db_table = 'task_manager_task'
+        ordering = ['-created_at']
+        verbose_name = 'Task'
+        constraints = [models.UniqueConstraint(fields=['title'], name='unique_title_task')]
+        verbose_name_plural = 'Tasks'
 
 
 class SubTask(models.Model):
@@ -39,3 +52,11 @@ class SubTask(models.Model):
 
     def __str__(self):
         return self.title
+
+
+    class Meta:
+        db_table = 'task_manager_subtask'
+        ordering = ['-created_at']
+        verbose_name = 'SubTask'
+        constraints = [models.UniqueConstraint(fields=['title'], name='unique_title_subtask')]
+        verbose_name_plural = 'Subtasks'
