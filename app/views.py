@@ -1,8 +1,8 @@
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, action
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.views import APIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
@@ -105,31 +105,42 @@ def hello(request):
 #         subtask.delete()
 #         return Response(status=status.HTTP_204_NO_CONTENT)
 
-class TaskListCreateAPIView(ListCreateAPIView):
-    queryset = Task.objects.all()
-    serializer_class = TaskSerializer
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter,
-                       filters.OrderingFilter]
-    filterset_fields = ['status', 'deadline']
-    search_fields = ['title', 'description']
-    ordering_fields = ['created_at']
+# class TaskListCreateAPIView(ListCreateAPIView):
+#     queryset = Task.objects.all()
+#     serializer_class = TaskSerializer
+#     filter_backends = [DjangoFilterBackend, filters.SearchFilter,
+#                        filters.OrderingFilter]
+#     filterset_fields = ['status', 'deadline']
+#     search_fields = ['title', 'description']
+#     ordering_fields = ['created_at']
+#
+#
+# class TaskRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
+#     queryset = Task.objects.all()
+#     serializer_class = TaskSerializer
+#
+#
+# class SubTaskListCreateAPIView(ListCreateAPIView):
+#     queryset = SubTask.objects.all()
+#     serializer_class = SubTaskCreateSerializer
+#     filter_backends = [DjangoFilterBackend, filters.SearchFilter,
+#                        filters.OrderingFilter]
+#     filterset_fields = ['status', 'deadline']
+#     search_fields = ['title', 'description']
+#     ordering_fields = ['created_at']
+#
+#
+# class SubTaskRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
+#     queryset = SubTask.objects.all()
+#     serializer_class = SubTaskCreateSerializer
 
 
-class TaskRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
-    queryset = Task.objects.all()
-    serializer_class = TaskSerializer
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class=CategoryCreateSerializer
 
-
-class SubTaskListCreateAPIView(ListCreateAPIView):
-    queryset = SubTask.objects.all()
-    serializer_class = SubTaskCreateSerializer
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter,
-                       filters.OrderingFilter]
-    filterset_fields = ['status', 'deadline']
-    search_fields = ['title', 'description']
-    ordering_fields = ['created_at']
-
-
-class SubTaskRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
-    queryset = SubTask.objects.all()
-    serializer_class = SubTaskCreateSerializer
+    @action(detail=True, methods=['get'])
+    def tasks_count(self, request, pk=None):
+        category = self.get_object()
+        count_tasks = category.task_set.count()
+        return Response({'count': count_tasks})

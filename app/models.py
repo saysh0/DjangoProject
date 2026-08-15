@@ -1,6 +1,14 @@
 from django.db import models
+from django.utils import timezone
+
 
 # Create your models here.
+class SoftDeleteManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(is_deleted=False)
+
+
+
 class Choices(models.TextChoices):
     NEW = 'new'
     IN_PROGRESS = 'in_progress'
@@ -11,6 +19,10 @@ class Choices(models.TextChoices):
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+    is_deleted = models.BooleanField(default=False)
+    objects = SoftDeleteManager()
+
 
     def __str__(self):
         return self.name
@@ -21,6 +33,12 @@ class Category(models.Model):
         verbose_name = 'Category'
         constraints = [models.UniqueConstraint(fields=['name'], name='unique_name_category')]
         verbose_name_plural = 'Categories'
+
+
+    def delete(self, *args, **kwargs):
+        self.is_deleted = True
+        self.deleted_at = timezone.now()
+        self.save()
 
 class Task(models.Model):
     title = models.CharField(max_length=100)

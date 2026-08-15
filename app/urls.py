@@ -1,4 +1,6 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework import routers
+
 from . import views
 
 # urlpatterns = [path('hello/', views.hello, name='hello'),
@@ -9,8 +11,14 @@ from . import views
 #                path('subtasks/', views.SubTaskListCreateView.as_view(), name='subtasks-list-create'),
 #                path('subtasks/<int:pk>/', views.SubTaskDetailUpdateDeleteView.as_view(), name='subtasks-detail'),]
 
-urlpatterns = [path('tasks/', views.TaskListCreateAPIView.as_view(), name='tasks_create_lsit'),
-               path('tasks/<int:pk>/', views.TaskRetrieveUpdateDestroyAPIView.as_view(), name='task_delete_update_details'),
-               path('subtask/', views.SubTaskListCreateAPIView.as_view(), name='subtask_create_lsit'),
-               path('subtask/<int:pk>/', views.SubTaskRetrieveUpdateDestroyAPIView.as_view(), name='subtask_delete_update_details'),
+# urlpatterns = [path('tasks/', views.TaskListCreateAPIView.as_view(), name='tasks_create_lsit'),
+#                path('tasks/<int:pk>/', views.TaskRetrieveUpdateDestroyAPIView.as_view(), name='task_delete_update_details'),
+#                path('subtask/', views.SubTaskListCreateAPIView.as_view(), name='subtask_create_lsit'),
+#                path('subtask/<int:pk>/', views.SubTaskRetrieveUpdateDestroyAPIView.as_view(), name='subtask_delete_update_details'),
+#                ]
+
+router = routers.DefaultRouter()
+router.register(r'category', views.CategoryViewSet)
+
+urlpatterns = [path('', include(router.urls)),
                ]
