@@ -1,12 +1,14 @@
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view, action
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
-from rest_framework import status, viewsets
+from rest_framework import status, viewsets, permissions
 from rest_framework.views import APIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework import filters
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from .models import *
 from.serializers import *
@@ -138,9 +140,43 @@ def hello(request):
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class=CategoryCreateSerializer
+    authentication_classes=[JWTAuthentication]
+    permission_classes=[permissions.IsAuthenticatedOrReadOnly]
 
     @action(detail=True, methods=['get'])
     def tasks_count(self, request, pk=None):
         category = self.get_object()
         count_tasks = category.task_set.count()
         return Response({'count': count_tasks})
+
+
+class TaskViewSet(viewsets.ModelViewSet):
+    queryset = Task.objects.all()
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter,
+                       filters.OrderingFilter]
+    filterset_fields = ['status', 'deadline']
+    search_fields = ['title', 'description']
+    ordering_fields = ['created_at']
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    serializer_classes = {
+        'list': TaskDetailSerializer,
+        'create': TaskCreateSerializer
+    }
+    default_serializer_class = TaskSerializer
+
+
+    def get_serializer_class(self):
+        return self.serializer_classes.get(self.action, self.default_serializer_class)
+
+
+class SubTaskViewSet(viewsets.ModelViewSet):
+    queryset = SubTask.objects.all()
+    serializer_class = SubTaskCreateSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter,
+                       filters.OrderingFilter]
+    filterset_fields = ['status', 'deadline', 'task']
+    search_fields = ['title', 'description', 'task']
+    ordering_fields = ['created_at']

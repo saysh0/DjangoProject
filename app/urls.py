@@ -1,5 +1,6 @@
 from django.urls import path, include
 from rest_framework import routers
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from . import views
 
@@ -19,6 +20,10 @@ from . import views
 
 router = routers.DefaultRouter()
 router.register(r'category', views.CategoryViewSet)
+router.register(r'task', views.TaskViewSet)
+router.register(r'subtask', views.SubTaskViewSet)
 
 urlpatterns = [path('', include(router.urls)),
-               ]
+               path('token/', TokenObtainPairView.as_view(), name='token-obtain-payload'),
+               path('token/refresh/', TokenRefreshView.as_view(), name='token-refresh'),
+              ]
