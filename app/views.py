@@ -1,3 +1,4 @@
+from django.db.models import Model
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view, action
@@ -9,8 +10,10 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework import filters
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from .permissions import TaskPermission, SubTaskPermission
 
 from .models import *
+from .permissions import SubTaskPermission
 from.serializers import *
 # Create your views here.
 
@@ -158,7 +161,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     search_fields = ['title', 'description']
     ordering_fields = ['created_at']
     authentication_classes = [JWTAuthentication]
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, TaskPermission]
     serializer_classes = {
         'list': TaskDetailSerializer,
         'create': TaskCreateSerializer
@@ -169,14 +172,26 @@ class TaskViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         return self.serializer_classes.get(self.action, self.default_serializer_class)
 
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+    @action(detail=False, methods=['get'])
+    def user_tasks(self, request, pk=None):
+        tasks = Task.objects.filter(owner=self.request.user).order_by('-created_at')
+        serializer = self.get_serializer(tasks, many=True)
+        return Response(serializer.data)
+
 
 class SubTaskViewSet(viewsets.ModelViewSet):
     queryset = SubTask.objects.all()
     serializer_class = SubTaskCreateSerializer
     authentication_classes = [JWTAuthentication]
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, SubTaskPermission]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter,
                        filters.OrderingFilter]
     filterset_fields = ['status', 'deadline', 'task']
     search_fields = ['title', 'description', 'task']
     ordering_fields = ['created_at']
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
