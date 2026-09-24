@@ -61,6 +61,11 @@ class Task(models.Model):
         constraints = [models.UniqueConstraint(fields=['title'], name='unique_title_task')]
         verbose_name_plural = 'Tasks'
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._original_status = self.status
+
+
 
 class SubTask(models.Model):
     title = models.CharField(max_length=100)
